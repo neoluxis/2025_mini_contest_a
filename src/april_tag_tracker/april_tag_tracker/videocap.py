@@ -93,7 +93,7 @@ class VideoCap(Node):
         self.declare_parameter("cam_idx", "/dev/video0")
         self.declare_parameter("fps", 240)
         self.declare_parameter("img_width", 640)
-        self.declare_parameter("img_height", 400)
+        self.declare_parameter("img_height", 480)
         # self.declare_parameter("img_fourcc", cv.VideoWriter.fourcc(*"MJPG"))
 
         self.get_logger().info(f"VideoCap Node {name}")

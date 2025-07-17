@@ -1,5 +1,5 @@
 from setuptools import find_packages, setup
-
+from glob import glob
 package_name = 'april_tag_tracker'
 
 setup(
@@ -10,6 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -21,7 +22,8 @@ setup(
     entry_points={
         "console_scripts": [
             f"videocap = {package_name}.videocap:main",
-            f"april_tag_tracker = {package_name}.april_tag_tracker:main"
+            f"april_tag_tracker = {package_name}.april_tag_tracker:main",
+            f"serial = {package_name}.serial_sender:main"
         ],
     },
 )

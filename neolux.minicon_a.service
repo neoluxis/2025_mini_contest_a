@@ -1,0 +1,22 @@
+[Unit]
+Description=Neolux Mini Contest A Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/dev_ws/minicon_a
+ExecStart=/root/dev_ws/minicon_a/neolux.minicon_a.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables for ROS2
+Environment="ROS_DOMAIN_ID=42"
+
+
+[Install]
+WantedBy=multi-user.target
