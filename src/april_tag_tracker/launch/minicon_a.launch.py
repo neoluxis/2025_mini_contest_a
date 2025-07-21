@@ -34,26 +34,38 @@ def generate_launch_description():
     )
     
     # 包含hobot_usb_cam的websocket launch文件
-    try:
-        hobot_usb_cam_path = get_package_share_directory('hobot_usb_cam')
-        hobot_usb_cam_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                os.path.join(hobot_usb_cam_path, 'launch', 'hobot_usb_cam_websocket.launch.py')
-            ]),
-            launch_arguments={
-                'device': '/dev/video0'
-            }.items()
-        )
-    except Exception as e:
-        print(f"Warning: Cannot find hobot_usb_cam package: {e}")
-        # 如果找不到包，可以使用ExecuteProcess作为备选方案
-        hobot_usb_cam_launch = ExecuteProcess(
-            cmd=['ros2', 'launch', 'hobot_usb_cam', 'hobot_usb_cam_websocket.launch.py', 'device:=/dev/video0'],
-            output='screen'
-        )
+    hobot_usb_cam_path = get_package_share_directory('hobot_usb_cam')
+    hobot_usb_cam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            os.path.join(hobot_usb_cam_path, 'launch', 'hobot_usb_cam.launch.py')
+        ]),
+        launch_arguments={
+            'device': '/dev/video0',
+            # 'image_height': '240',
+            # 'image_width': '320'
+        }.items()
+    )
+    # cam_node = Node(
+    #     package='april_tag_tracker',
+    #     executable='videocap',
+    #     name='videocap',
+    #     output='screen',
+    # )
+    
+    websocket_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            get_package_share_directory('websocket') + '/launch/websocket.launch.py'
+        ]),
+        launch_arguments={
+            'websocket_image_topic': '/image',
+            'websocket_only_show_image': 'true',
+        }.items()
+    )
     
     return LaunchDescription([
         april_tag_tracker_node,
-        serial_node,
+        # serial_node,
         hobot_usb_cam_launch,
+        # cam_node,
+        websocket_launch,
     ])

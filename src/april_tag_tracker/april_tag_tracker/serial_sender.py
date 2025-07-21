@@ -29,6 +29,9 @@ class Sender(Node):
         )
         self.string_publisher = self.create_publisher(String, '/serial/send_string', 10)
         
+        self.alive_timer = self.create_timer(1, self.iamalive)
+
+        
         self.serial = Serial(handle, baud)
         
     def scan_callback(self, msg):
@@ -42,10 +45,14 @@ class Sender(Node):
         sent = self.bytearr([0x31, cxl8, cxh8, 0x32])
         self.serial.write(sent)
         self.get_logger().info(f"Sent {sent}")
+        print(f"Sent {sent}")
         
         string_msg = String()
         string_msg.data = repr(sent)
         self.string_publisher.publish(string_msg)
+        
+    def iamalive(self):
+        self.get_logger().info("I am alive")
         
         
 def main(args=None):

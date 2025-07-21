@@ -7,7 +7,9 @@ import numpy as np
 import cv2 as cv
 
 from sensor_msgs.msg import CompressedImage
-from std_msgs.msg import UInt16MultiArray
+from std_msgs.msg import UInt16MultiArray, String
+
+from serial import Serial
 
 
 def ros2cv(RImg: CompressedImage):
@@ -22,6 +24,19 @@ def ros2cv(RImg: CompressedImage):
 
 
 class OpenCVAprilTagNode(Node):
+    
+    class bytearr(bytearray):
+        def __repr__(self):
+            s= "[" 
+            for x in self:
+                s += f'{x:02X}, '
+            s += ']'
+            return s
+        
+        
+        def __str__(self):
+            return self.__repr__()
+        
     def __init__(self):
         super().__init__('opencv_apriltag_node')
 
@@ -34,7 +49,7 @@ class OpenCVAprilTagNode(Node):
         )
         self.subscription2 = self.create_subscription(
             CompressedImage,
-            '/image_mjpeg',
+            '/image',
             self.image_callback,
             10
         )
@@ -52,6 +67,8 @@ class OpenCVAprilTagNode(Node):
         self.detector = cv.aruco.ArucoDetector(self.dictionary, self.parameters)
 
         self.get_logger().info('OpenCV AprilTag Node Initialized.')
+        
+        self.serial = Serial('/dev/ttyACM0', 115200)
 
     def image_callback(self, msg: CompressedImage):
         frame = ros2cv(msg)
@@ -64,6 +81,7 @@ class OpenCVAprilTagNode(Node):
             return
 
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        gray = cv.resize(gray, (0, 0), fx=0.5, fy=0.5)  # 缩小图像以提高处理速度
 
         # 检测 AprilTags
         corners, ids, _ = self.detector.detectMarkers(gray)
@@ -81,8 +99,15 @@ class OpenCVAprilTagNode(Node):
             msg_out.data = data
             self.publisher.publish(msg_out)
 
-            self.get_logger().info(f"Published {len(data)//2} tag(s): {data}")
-
+            # self.get_logger().info(f"Published {len(data)//2} tag(s): {data}")
+            self.send(data)
+            
+    def send(self, data):
+        cx = data[0]
+        cxl8, cxh8 = cx>>8 & 0xFF, cx & 0xff
+        sent = self.bytearr([0x31, cxl8, cxh8, 0x32])
+        self.serial.write(sent)
+        self.get_logger().info(f"Sent {sent}")
 
 def main(args=None):
     rclpy.init(args=args)
